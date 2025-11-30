@@ -1,0 +1,34 @@
+{
+  "name": "llmls_dev",
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "go.useLanguageServer": true,
+        "go.lintTool": "golangci-lint",
+        "go.formatTool": "goimports"
+      }
+    }
+  },
+
+  "runArgs": [
+    "--env-file=${localWorkspaceFolder}/.env.local"
+  ],
+
+  "initializeCommand": "test -f .env.local || cp .env.local.example .env.local",
+
+  "postCreateCommand": "test -f go.mod && go mod download || true",
+
+  "remoteUser": "vscode"
+}
