@@ -18,18 +18,18 @@ A command-line tool to list and explore LLM models from various providers via Op
 
 ### Option 1: Download Pre-built Binary (Recommended)
 
-Download the latest release from the [Releases page](https://github.com/yourusername/llmls/releases).
+Download the latest release from the [Releases page](https://github.com/mkyutani/llmls/releases).
 
 ### Option 2: Install with Go
 
 ```bash
-go install github.com/yourusername/llmls@latest
+go install github.com/mkyutani/llmls@latest
 ```
 
 ### Option 3: Build from Source
 
 ```bash
-git clone https://github.com/yourusername/llmls.git
+git clone https://github.com/mkyutani/llmls.git
 cd llmls
 go build -o llmls
 ```
