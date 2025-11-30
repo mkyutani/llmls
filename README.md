@@ -61,12 +61,65 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidelines including:
 
 ## Usage
 
-```bash
-# List available models
-go run main.go
+### Building
 
-# Build the binary
+```bash
 go build -o llmls
+```
+
+### Listing Models
+
+List all available models from OpenRouter:
+
+```bash
+./llmls
+```
+
+### Filtering Options
+
+Filter models by provider name (partial match, case-insensitive):
+
+```bash
+./llmls --provider anthropic
+./llmls --provider openai
+```
+
+Filter models by model name (partial match, case-insensitive):
+
+```bash
+./llmls --model gpt-4
+./llmls --model claude
+```
+
+Combine filters:
+
+```bash
+./llmls --provider google --model gemini
+```
+
+### Output Format
+
+Models are displayed with the following columns:
+- **Model ID** - Full model identifier
+- **Provider** - Provider name extracted from model ID
+- **Created** - Creation date in YYYY-MM-DD format (local timezone)
+- **Description** - Model description (truncated to 98 characters)
+
+Results are sorted by creation date in descending order (newest first).
+
+Example output:
+```
+anthropic/claude-opus-4.5      anthropic            2025-11-24  Claude Opus 4.5 is Anthropic's frontier reasoning model optimized for complex software engineeri..
+openai/gpt-4.1                 openai               2025-04-14  GPT-4.1 is a flagship large language model optimized for advanced instruction following, real-worl..
+google/gemini-3-pro-preview    google               2025-11-18  Gemini 3 Pro is Google's flagship frontier model for high-precision multimodal reasoning, combin..
+```
+
+### Help
+
+Display usage information:
+
+```bash
+./llmls --help
 ```
 
 ## Contributing
