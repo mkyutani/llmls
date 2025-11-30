@@ -107,14 +107,36 @@ func ExtractProvider(modelID string) string {
 	return "Unknown"
 }
 
-// DisplayModels prints models in formatted output
+// DisplayModels prints models in formatted output with dynamic column widths
 func DisplayModels(models []Model) {
+	if len(models) == 0 {
+		return
+	}
+
+	// Calculate maximum widths for each column
+	maxModelWidth := 0
+	maxProviderWidth := 0
+
+	for _, model := range models {
+		if len(model.ID) > maxModelWidth {
+			maxModelWidth = len(model.ID)
+		}
+		provider := ExtractProvider(model.ID)
+		if len(provider) > maxProviderWidth {
+			maxProviderWidth = len(provider)
+		}
+	}
+
+	// Display each model with dynamic column widths
 	for _, model := range models {
 		provider := ExtractProvider(model.ID)
 		date := FormatDate(model.Created)
 		desc := TruncateDescription(model.Description, 98)
 
-		// Format: model_name (padded) | provider (padded) | date | description
-		fmt.Printf("%-30s %-20s %s  %s\n", model.ID, provider, date, desc)
+		// Format with dynamic widths: model_id | provider | date | description
+		fmt.Printf("%-*s  %-*s  %s  %s\n",
+			maxModelWidth, model.ID,
+			maxProviderWidth, provider,
+			date, desc)
 	}
 }
