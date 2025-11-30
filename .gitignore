@@ -11,6 +11,9 @@
 # Project binary
 llmls
 
+# Build output directory
+dist/
+
 # Test binary, built with `go test -c`
 *.test
 
