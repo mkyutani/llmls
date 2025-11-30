@@ -102,10 +102,12 @@ func TruncateDescription(desc string, maxLen int) string {
 	desc = strings.ReplaceAll(desc, "\r", " ")
 	desc = strings.ReplaceAll(desc, "\n", " ")
 
-	if len(desc) <= maxLen {
+	// Convert to rune slice to handle multi-byte characters correctly
+	runes := []rune(desc)
+	if len(runes) <= maxLen {
 		return desc
 	}
-	return desc[:maxLen] + ".."
+	return string(runes[:maxLen]) + ".."
 }
 
 // ExtractProvider extracts provider name from model ID
