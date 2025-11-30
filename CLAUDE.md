@@ -93,9 +93,107 @@ refactor: extract model formatting to separate function
 - `main` - Production-ready code
 - Feature branches: `feature/description`
 - Bug fixes: `fix/description`
+
+**For solo development:**
+- You may commit directly to `main` for small changes
+- Use feature branches for larger changes to maintain clean history
+- PRs are optional but can be useful for documenting major changes
+
+**For team development:**
 - Always create pull requests for review before merging to `main`
 
-### Workflow
+### GitHub Issue Workflow
+
+Follow this workflow when working on GitHub issues:
+
+#### 1. Issue Selection and Assignment
+```bash
+# List all open issues
+gh issue list
+
+# View specific issue details
+gh issue view <number>
+
+# Assign issue to yourself
+gh issue edit <number> --add-assignee @me
+```
+
+#### 2. Design Discussion (for non-trivial issues)
+- Discuss design approach in GitHub issue comments
+- For complex issues, document:
+  - Proposed approach
+  - Key architectural decisions
+  - Alternative options considered
+  - Testing strategy
+- Get feedback/approval in issue comments before implementation
+
+#### 3. Branch Creation
+- **Naming convention**:
+  - Features: `feature/issue-<number>-brief-description`
+  - Bug fixes: `fix/issue-<number>-brief-description`
+  - Example: `feature/issue-1-cli-interface`
+```bash
+git checkout -b feature/issue-<number>-description
+```
+
+#### 4. Implementation
+- Follow the design discussed in issue comments
+- Make atomic commits with proper format
+- Reference issue in commits when relevant: `feat: add CLI interface for issue #1`
+- Follow code standards (see below)
+
+#### 5. Testing
+- Perform manual testing
+- Add unit tests if applicable
+- Verify issue requirements are met
+
+#### 6. Merge to Main
+
+**Option A: Direct merge (solo development)**
+```bash
+# Switch to main
+git checkout main
+
+# Merge feature branch
+git merge feature/issue-<number>-description
+
+# Push to remote
+git push
+
+# Delete feature branch
+git branch -d feature/issue-<number>-description
+
+# Close issue
+gh issue close <number> --comment "Implemented in commits [commit-hash]"
+```
+
+**Option B: Pull Request (team development or major changes)**
+```bash
+# Push branch
+git push -u origin feature/issue-<number>-description
+
+# Create PR
+gh pr create --title "feat: description for issue #<number>" \
+  --body "Closes #<number>
+
+## Summary
+Brief description of changes.
+
+## Changes
+- Change 1
+- Change 2
+
+## Testing
+- [x] Manual testing completed
+- [x] Issue requirements verified"
+
+# After review and merge
+git checkout main
+git pull
+git branch -d feature/issue-<number>-description
+```
+
+### Standard Workflow Summary
 
 1. Create a feature branch from `main`
 2. Make your changes with properly formatted commits
