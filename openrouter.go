@@ -95,7 +95,13 @@ func FormatDate(timestamp int64) string {
 }
 
 // TruncateDescription truncates description to maxLen characters, adding ".." if truncated
+// Also replaces newline characters with spaces
 func TruncateDescription(desc string, maxLen int) string {
+	// Replace newline characters with spaces
+	desc = strings.ReplaceAll(desc, "\r\n", " ")
+	desc = strings.ReplaceAll(desc, "\r", " ")
+	desc = strings.ReplaceAll(desc, "\n", " ")
+
 	if len(desc) <= maxLen {
 		return desc
 	}
