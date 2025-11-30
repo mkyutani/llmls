@@ -40,18 +40,18 @@ The project uses `.env.local` for environment-specific configuration.
 
 **Important:** Never commit `.env.local` or actual API keys to the repository.
 
-## Communication Language
+## Git Communication Language
 
-**All project communications must be in English:**
+**All git-related communications must be in English:**
 - Commit messages
 - Pull request titles and descriptions
 - Issue titles and descriptions
 - Code comments and documentation
 - Release notes
-- Code review comments
-- Any other project-related communication
 
-This ensures consistency and accessibility for all contributors and users.
+This ensures consistency and accessibility for all contributors and users in version control history.
+
+**Note:** Other communications (chat, discussion, etc.) can be in any language.
 
 ## Git Workflow
 
