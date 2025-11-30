@@ -186,3 +186,98 @@ func DisplayModels(models []Model) {
 			date, desc)
 	}
 }
+
+// DisplayProviders prints unique provider names, optionally filtered
+func DisplayProviders(models []Model, filter string) {
+	if len(models) == 0 {
+		return
+	}
+
+	// Extract unique providers
+	providerSet := make(map[string]bool)
+	for _, model := range models {
+		provider := ExtractProvider(model.ID)
+		providerSet[provider] = true
+	}
+
+	// Convert to slice and filter
+	var providers []string
+	filterLower := strings.ToLower(filter)
+	for provider := range providerSet {
+		if filter == "" || strings.Contains(strings.ToLower(provider), filterLower) {
+			providers = append(providers, provider)
+		}
+	}
+
+	// Sort alphabetically
+	sort.Strings(providers)
+
+	// Calculate max width
+	maxWidth := 0
+	for _, provider := range providers {
+		if len(provider) > maxWidth {
+			maxWidth = len(provider)
+		}
+	}
+
+	// Display providers
+	for _, provider := range providers {
+		fmt.Printf("%-*s\n", maxWidth, provider)
+	}
+}
+
+// DisplayModelsFiltered prints models with provider names, filtered by model name
+func DisplayModelsFiltered(models []Model, filter string) {
+	if len(models) == 0 {
+		return
+	}
+
+	// Filter models by name (case-insensitive)
+	var filtered []Model
+	filterLower := strings.ToLower(filter)
+	for _, model := range models {
+		if filter == "" || strings.Contains(strings.ToLower(model.ID), filterLower) || strings.Contains(strings.ToLower(model.Name), filterLower) {
+			filtered = append(filtered, model)
+		}
+	}
+
+	if len(filtered) == 0 {
+		return
+	}
+
+	// Sort by creation date descending
+	SortModelsByCreatedDesc(filtered)
+
+	// Get terminal width
+	termWidth := GetTerminalWidth()
+
+	// Calculate maximum widths for model and provider columns
+	maxModelWidth := 0
+	maxProviderWidth := 0
+
+	for _, model := range filtered {
+		if len(model.ID) > maxModelWidth {
+			maxModelWidth = len(model.ID)
+		}
+		provider := ExtractProvider(model.ID)
+		if len(provider) > maxProviderWidth {
+			maxProviderWidth = len(provider)
+		}
+	}
+
+	// Calculate available width for description
+	descWidth := CalculateDescriptionWidth(termWidth, maxModelWidth, maxProviderWidth)
+
+	// Display each model with dynamic column widths
+	for _, model := range filtered {
+		provider := ExtractProvider(model.ID)
+		date := FormatDate(model.Created)
+		desc := TruncateDescription(model.Description, descWidth)
+
+		// Format with dynamic widths: model_id | provider | date | description
+		fmt.Printf("%-*s %-*s %s %s\n",
+			maxModelWidth, model.ID,
+			maxProviderWidth, provider,
+			date, desc)
+	}
+}
