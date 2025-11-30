@@ -159,11 +159,13 @@ git merge feature/issue-<number>-description
 
 # Delete feature branch
 git branch -d feature/issue-<number>-description
-```
 
-**IMPORTANT: The following operations require user approval before execution:**
-- `git push` - Ask user before pushing to remote
-- `gh issue close` - Ask user before closing the issue
+# Push to remote (requires user confirmation)
+git push
+
+# Close issue (requires user confirmation)
+gh issue close <number> --comment "Implemented in commits [commit-hash]"
+```
 
 **Option B: Pull Request (team development or major changes)**
 ```bash
@@ -207,6 +209,14 @@ When asking Claude Code to make changes:
 - Provide clear, specific requirements
 - Reference existing files when relevant
 - Ask for explanations if you don't understand suggested changes
+
+### User Confirmation Requirements
+
+Certain operations require explicit user confirmation before execution:
+- **`git push`** - Pushing changes to remote repository is irreversible and affects shared code
+- **`gh issue close`** - Closing issues should be reviewed to ensure implementation is complete and satisfactory
+
+These restrictions are enforced in `.claude/settings.local.json` and help prevent unintended modifications to the remote repository and project tracking.
 
 ### Code Standards
 
