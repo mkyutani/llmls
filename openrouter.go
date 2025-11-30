@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"golang.org/x/term"
 )
 
 const openRouterModelsURL = "https://openrouter.ai/api/v1/models"
@@ -107,13 +110,44 @@ func ExtractProvider(modelID string) string {
 	return "Unknown"
 }
 
+// GetTerminalWidth returns the terminal width, or a default value if unavailable
+func GetTerminalWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		// Default to 120 if terminal size cannot be determined
+		return 120
+	}
+	return width
+}
+
+// CalculateDescriptionWidth calculates the available width for description
+func CalculateDescriptionWidth(termWidth, modelWidth, providerWidth int) int {
+	// Column layout: modelID (2 spaces) provider (2 spaces) date (2 spaces) description
+	// Date is always 10 characters (YYYY-MM-DD)
+	dateWidth := 10
+	spacingWidth := 6 // 3 separators * 2 spaces each
+	usedWidth := modelWidth + providerWidth + dateWidth + spacingWidth
+
+	descWidth := termWidth - usedWidth
+
+	// Minimum description width
+	if descWidth < 30 {
+		descWidth = 30
+	}
+
+	return descWidth
+}
+
 // DisplayModels prints models in formatted output with dynamic column widths
 func DisplayModels(models []Model) {
 	if len(models) == 0 {
 		return
 	}
 
-	// Calculate maximum widths for each column
+	// Get terminal width
+	termWidth := GetTerminalWidth()
+
+	// Calculate maximum widths for model and provider columns
 	maxModelWidth := 0
 	maxProviderWidth := 0
 
@@ -127,11 +161,14 @@ func DisplayModels(models []Model) {
 		}
 	}
 
+	// Calculate available width for description
+	descWidth := CalculateDescriptionWidth(termWidth, maxModelWidth, maxProviderWidth)
+
 	// Display each model with dynamic column widths
 	for _, model := range models {
 		provider := ExtractProvider(model.ID)
 		date := FormatDate(model.Created)
-		desc := TruncateDescription(model.Description, 98)
+		desc := TruncateDescription(model.Description, descWidth)
 
 		// Format with dynamic widths: model_id | provider | date | description
 		fmt.Printf("%-*s  %-*s  %s  %s\n",
