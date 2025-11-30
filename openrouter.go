@@ -126,7 +126,8 @@ func CalculateDescriptionWidth(termWidth, modelWidth, providerWidth int) int {
 	// Date is always 10 characters (YYYY-MM-DD)
 	dateWidth := 10
 	spacingWidth := 6 // 3 separators * 2 spaces each
-	usedWidth := modelWidth + providerWidth + dateWidth + spacingWidth
+	safetyMargin := 5 // Safety margin to prevent line wrapping
+	usedWidth := modelWidth + providerWidth + dateWidth + spacingWidth + safetyMargin
 
 	descWidth := termWidth - usedWidth
 
