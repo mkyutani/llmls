@@ -157,15 +157,13 @@ git checkout main
 # Merge feature branch
 git merge feature/issue-<number>-description
 
-# Push to remote
-git push
-
 # Delete feature branch
 git branch -d feature/issue-<number>-description
-
-# Close issue
-gh issue close <number> --comment "Implemented in commits [commit-hash]"
 ```
+
+**IMPORTANT: The following operations require user approval before execution:**
+- `git push` - Ask user before pushing to remote
+- `gh issue close` - Ask user before closing the issue
 
 **Option B: Pull Request (team development or major changes)**
 ```bash
