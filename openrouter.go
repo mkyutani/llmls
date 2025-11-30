@@ -122,10 +122,10 @@ func GetTerminalWidth() int {
 
 // CalculateDescriptionWidth calculates the available width for description
 func CalculateDescriptionWidth(termWidth, modelWidth, providerWidth int) int {
-	// Column layout: modelID (2 spaces) provider (2 spaces) date (2 spaces) description
+	// Column layout: modelID (1 space) provider (1 space) date (1 space) description
 	// Date is always 10 characters (YYYY-MM-DD)
 	dateWidth := 10
-	spacingWidth := 6 // 3 separators * 2 spaces each
+	spacingWidth := 3 // 3 separators * 1 space each
 	safetyMargin := 5 // Safety margin to prevent line wrapping
 	usedWidth := modelWidth + providerWidth + dateWidth + spacingWidth + safetyMargin
 
@@ -172,7 +172,7 @@ func DisplayModels(models []Model) {
 		desc := TruncateDescription(model.Description, descWidth)
 
 		// Format with dynamic widths: model_id | provider | date | description
-		fmt.Printf("%-*s  %-*s  %s  %s\n",
+		fmt.Printf("%-*s %-*s %s %s\n",
 			maxModelWidth, model.ID,
 			maxProviderWidth, provider,
 			date, desc)
