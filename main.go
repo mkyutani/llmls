@@ -28,9 +28,9 @@ func main() {
 
 func listModelsCommand(args []string) {
 	fs := flag.NewFlagSet("llmls", flag.ExitOnError)
-	providerFilter := fs.String("provider", "", "Filter models by provider name (partial match)")
-	modelFilter := fs.String("model", "", "Filter models by model name (partial match)")
-	descriptionFilter := fs.String("description", "", "Filter models by description text (partial match)")
+	providerFilter := fs.String("provider", "", "Filter models by provider name (glob pattern: * and ?)")
+	modelFilter := fs.String("model", "", "Filter models by model name (glob pattern: * and ?)")
+	descriptionFilter := fs.String("description", "", "Filter models by description text (glob pattern: * and ?)")
 	detail := fs.Bool("detail", false, "Display detailed model information")
 
 	fs.Usage = func() {
@@ -40,10 +40,12 @@ func listModelsCommand(args []string) {
 		fmt.Fprintf(os.Stderr, "  llmls providers [filter]\n")
 		fmt.Fprintf(os.Stderr, "  llmls models [filter]\n\n")
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
-		fmt.Fprintf(os.Stderr, "  search-term  Search across model ID, provider, and description (ignored if flags are used)\n\n")
+		fmt.Fprintf(os.Stderr, "  search-term  Search across model ID, provider, and description using glob pattern\n")
+		fmt.Fprintf(os.Stderr, "               Supports * (any sequence) and ? (single character)\n")
+		fmt.Fprintf(os.Stderr, "               Ignored if flags are used\n\n")
 		fmt.Fprintf(os.Stderr, "Subcommands:\n")
-		fmt.Fprintf(os.Stderr, "  providers [filter]  List provider names (optionally filtered)\n")
-		fmt.Fprintf(os.Stderr, "  models [filter]     List models with provider names (optionally filtered)\n\n")
+		fmt.Fprintf(os.Stderr, "  providers [filter]  List provider names (optionally filtered with glob pattern)\n")
+		fmt.Fprintf(os.Stderr, "  models [filter]     List models with provider names (optionally filtered with glob pattern)\n\n")
 		fmt.Fprintf(os.Stderr, "Flags:\n")
 		fs.PrintDefaults()
 	}
@@ -85,8 +87,9 @@ func providersCommand() {
 	fs := flag.NewFlagSet("providers", flag.ExitOnError)
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: llmls providers [filter]\n\n")
-		fmt.Fprintf(os.Stderr, "List provider names, optionally filtered by a search string.\n")
-		fmt.Fprintf(os.Stderr, "Filter performs case-insensitive partial matching.\n")
+		fmt.Fprintf(os.Stderr, "List provider names, optionally filtered using glob pattern.\n")
+		fmt.Fprintf(os.Stderr, "Supports * (any sequence) and ? (single character).\n")
+		fmt.Fprintf(os.Stderr, "Example: llmls providers \"open*\"\n")
 	}
 
 	fs.Parse(os.Args[2:])
@@ -111,8 +114,9 @@ func modelsCommand() {
 	fs := flag.NewFlagSet("models", flag.ExitOnError)
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: llmls models [filter]\n\n")
-		fmt.Fprintf(os.Stderr, "List models with provider names, optionally filtered by a search string.\n")
-		fmt.Fprintf(os.Stderr, "Filter performs case-insensitive partial matching on model names.\n")
+		fmt.Fprintf(os.Stderr, "List models with provider names, optionally filtered using glob pattern.\n")
+		fmt.Fprintf(os.Stderr, "Supports * (any sequence) and ? (single character).\n")
+		fmt.Fprintf(os.Stderr, "Example: llmls models \"*gpt-4*\"\n")
 	}
 
 	fs.Parse(os.Args[2:])

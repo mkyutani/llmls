@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -57,6 +58,22 @@ type ModelsResponse struct {
 	Data []Model `json:"data"`
 }
 
+// globMatch performs case-insensitive glob pattern matching
+// Supports * (any sequence) and ? (single character)
+func globMatch(pattern, str string) bool {
+	// Convert both to lowercase for case-insensitive matching
+	pattern = strings.ToLower(pattern)
+	str = strings.ToLower(str)
+
+	// Use filepath.Match for glob matching
+	matched, err := filepath.Match(pattern, str)
+	if err != nil {
+		// If pattern is invalid, fall back to exact match
+		return pattern == str
+	}
+	return matched
+}
+
 // FetchModels retrieves models from OpenRouter API
 func FetchModels() ([]Model, error) {
 	resp, err := http.Get(openRouterModelsURL)
@@ -82,7 +99,8 @@ func FetchModels() ([]Model, error) {
 	return modelsResp.Data, nil
 }
 
-// FilterModels filters models by provider, model name, description, and unified search term (case-insensitive partial match)
+// FilterModels filters models by provider, model name, description, and unified search term using glob patterns
+// Supports * (any sequence) and ? (single character) in patterns
 // If explicit filters (provider, model, description) are provided, they take precedence over searchTerm
 // searchTerm performs OR matching across model ID, provider name, and description
 func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter, searchTerm string) []Model {
@@ -98,16 +116,14 @@ func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter
 
 	// Use search term if no explicit filters are provided
 	if !hasExplicitFilters && searchTerm != "" {
-		searchLower := strings.ToLower(searchTerm)
-
 		for _, model := range models {
 			// Extract provider from ID (format: "provider/model-name")
 			provider := ExtractProvider(model.ID)
 
-			// OR matching: search term matches any field
-			modelMatch := strings.Contains(strings.ToLower(model.ID), searchLower) || strings.Contains(strings.ToLower(model.Name), searchLower)
-			providerMatch := strings.Contains(strings.ToLower(provider), searchLower)
-			descriptionMatch := strings.Contains(strings.ToLower(model.Description), searchLower)
+			// OR matching: search term matches any field using glob pattern
+			modelMatch := globMatch(searchTerm, model.ID) || globMatch(searchTerm, model.Name)
+			providerMatch := globMatch(searchTerm, provider)
+			descriptionMatch := globMatch(searchTerm, model.Description)
 
 			if modelMatch || providerMatch || descriptionMatch {
 				filtered = append(filtered, model)
@@ -118,17 +134,13 @@ func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter
 	}
 
 	// Use explicit filters (AND matching)
-	providerLower := strings.ToLower(providerFilter)
-	modelLower := strings.ToLower(modelFilter)
-	descriptionLower := strings.ToLower(descriptionFilter)
-
 	for _, model := range models {
 		// Extract provider from ID (format: "provider/model-name")
 		provider := ExtractProvider(model.ID)
 
-		providerMatch := providerFilter == "" || strings.Contains(strings.ToLower(provider), providerLower)
-		modelMatch := modelFilter == "" || strings.Contains(strings.ToLower(model.ID), modelLower) || strings.Contains(strings.ToLower(model.Name), modelLower)
-		descriptionMatch := descriptionFilter == "" || strings.Contains(strings.ToLower(model.Description), descriptionLower)
+		providerMatch := providerFilter == "" || globMatch(providerFilter, provider)
+		modelMatch := modelFilter == "" || globMatch(modelFilter, model.ID) || globMatch(modelFilter, model.Name)
+		descriptionMatch := descriptionFilter == "" || globMatch(descriptionFilter, model.Description)
 
 		if providerMatch && modelMatch && descriptionMatch {
 			filtered = append(filtered, model)
@@ -244,7 +256,7 @@ func DisplayModels(models []Model) {
 	}
 }
 
-// DisplayProviders prints unique provider names, optionally filtered
+// DisplayProviders prints unique provider names, optionally filtered using glob pattern
 func DisplayProviders(models []Model, filter string) {
 	if len(models) == 0 {
 		return
@@ -257,11 +269,10 @@ func DisplayProviders(models []Model, filter string) {
 		providerSet[provider] = true
 	}
 
-	// Convert to slice and filter
+	// Convert to slice and filter using glob pattern
 	var providers []string
-	filterLower := strings.ToLower(filter)
 	for provider := range providerSet {
-		if filter == "" || strings.Contains(strings.ToLower(provider), filterLower) {
+		if filter == "" || globMatch(filter, provider) {
 			providers = append(providers, provider)
 		}
 	}
@@ -416,17 +427,16 @@ func WrapText(text string, width int) []string {
 	return lines
 }
 
-// DisplayModelsFiltered prints models with provider names, filtered by model name
+// DisplayModelsFiltered prints models with provider names, filtered by model name using glob pattern
 func DisplayModelsFiltered(models []Model, filter string) {
 	if len(models) == 0 {
 		return
 	}
 
-	// Filter models by name (case-insensitive)
+	// Filter models by name using glob pattern
 	var filtered []Model
-	filterLower := strings.ToLower(filter)
 	for _, model := range models {
-		if filter == "" || strings.Contains(strings.ToLower(model.ID), filterLower) || strings.Contains(strings.ToLower(model.Name), filterLower) {
+		if filter == "" || globMatch(filter, model.ID) || globMatch(filter, model.Name) {
 			filtered = append(filtered, model)
 		}
 	}
