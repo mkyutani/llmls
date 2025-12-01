@@ -35,9 +35,11 @@ func listModelsCommand(args []string) {
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "llmls - List and manage LLM models\n\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n")
-		fmt.Fprintf(os.Stderr, "  llmls [flags]\n")
+		fmt.Fprintf(os.Stderr, "  llmls [flags] [search-term]\n")
 		fmt.Fprintf(os.Stderr, "  llmls providers [filter]\n")
 		fmt.Fprintf(os.Stderr, "  llmls models [filter]\n\n")
+		fmt.Fprintf(os.Stderr, "Arguments:\n")
+		fmt.Fprintf(os.Stderr, "  search-term  Search across model ID, provider, and description (ignored if flags are used)\n\n")
 		fmt.Fprintf(os.Stderr, "Subcommands:\n")
 		fmt.Fprintf(os.Stderr, "  providers [filter]  List provider names (optionally filtered)\n")
 		fmt.Fprintf(os.Stderr, "  models [filter]     List models with provider names (optionally filtered)\n\n")
@@ -51,6 +53,12 @@ func listModelsCommand(args []string) {
 		fs.Parse(os.Args[1:])
 	}
 
+	// Get search term from positional argument
+	searchTerm := ""
+	if fs.NArg() > 0 {
+		searchTerm = fs.Arg(0)
+	}
+
 	// Fetch models from OpenRouter
 	models, err := FetchModels()
 	if err != nil {
@@ -59,7 +67,7 @@ func listModelsCommand(args []string) {
 	}
 
 	// Filter models
-	models = FilterModels(models, *providerFilter, *modelFilter, *descriptionFilter)
+	models = FilterModels(models, *providerFilter, *modelFilter, *descriptionFilter, searchTerm)
 
 	// Sort by creation date descending
 	SortModelsByCreatedDesc(models)

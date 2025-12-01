@@ -53,23 +53,49 @@ func FetchModels() ([]Model, error) {
 	return modelsResp.Data, nil
 }
 
-// FilterModels filters models by provider, model name, and description (case-insensitive partial match)
-func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter string) []Model {
-	if providerFilter == "" && modelFilter == "" && descriptionFilter == "" {
+// FilterModels filters models by provider, model name, description, and unified search term (case-insensitive partial match)
+// If explicit filters (provider, model, description) are provided, they take precedence over searchTerm
+// searchTerm performs OR matching across model ID, provider name, and description
+func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter, searchTerm string) []Model {
+	// If using explicit filters, ignore search term
+	hasExplicitFilters := providerFilter != "" || modelFilter != "" || descriptionFilter != ""
+
+	// If no filters at all, return all models
+	if !hasExplicitFilters && searchTerm == "" {
 		return models
 	}
 
 	var filtered []Model
+
+	// Use search term if no explicit filters are provided
+	if !hasExplicitFilters && searchTerm != "" {
+		searchLower := strings.ToLower(searchTerm)
+
+		for _, model := range models {
+			// Extract provider from ID (format: "provider/model-name")
+			provider := ExtractProvider(model.ID)
+
+			// OR matching: search term matches any field
+			modelMatch := strings.Contains(strings.ToLower(model.ID), searchLower) || strings.Contains(strings.ToLower(model.Name), searchLower)
+			providerMatch := strings.Contains(strings.ToLower(provider), searchLower)
+			descriptionMatch := strings.Contains(strings.ToLower(model.Description), searchLower)
+
+			if modelMatch || providerMatch || descriptionMatch {
+				filtered = append(filtered, model)
+			}
+		}
+
+		return filtered
+	}
+
+	// Use explicit filters (AND matching)
 	providerLower := strings.ToLower(providerFilter)
 	modelLower := strings.ToLower(modelFilter)
 	descriptionLower := strings.ToLower(descriptionFilter)
 
 	for _, model := range models {
 		// Extract provider from ID (format: "provider/model-name")
-		provider := ""
-		if idx := strings.Index(model.ID, "/"); idx > 0 {
-			provider = model.ID[:idx]
-		}
+		provider := ExtractProvider(model.ID)
 
 		providerMatch := providerFilter == "" || strings.Contains(strings.ToLower(provider), providerLower)
 		modelMatch := modelFilter == "" || strings.Contains(strings.ToLower(model.ID), modelLower) || strings.Contains(strings.ToLower(model.Name), modelLower)
