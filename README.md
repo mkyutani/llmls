@@ -3,14 +3,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Version](https://img.shields.io/badge/Go-1.23-blue.svg)](https://go.dev)
 
-A command-line tool to list and explore LLM models from various providers via OpenRouter.
+A command-line tool to list and explore LLM models from various providers via OpenRouter and Ollama.
 
 ## Features
 
-- **Browse Models** - List all available LLM models from OpenRouter
+- **Multiple Providers** - List models from OpenRouter and Ollama in a unified view
+- **Browse Models** - List all available LLM models from OpenRouter and local Ollama instances
 - **Glob Pattern Search** - Search by model ID using `*` and `?` wildcards
 - **Provider List** - Quick access to all provider names
 - **Detailed Information** - View comprehensive model details with `--detail` flag
+- **Ollama Support** - Automatically includes local Ollama models with customizable server URL
 - **Sorted Output** - Models are sorted by creation date (newest first)
 - **Pipe-Friendly** - Designed to work seamlessly with Unix tools like `grep`, `awk`, and `sort`
 
@@ -95,7 +97,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidelines including:
 
 ### Basic Commands
 
-List all available models:
+List all available models (OpenRouter + Ollama):
 
 ```bash
 llmls
@@ -105,6 +107,7 @@ Search models by ID (glob pattern):
 
 ```bash
 llmls "anthropic/*"      # All Anthropic models
+llmls "ollama/*"         # All Ollama local models
 llmls "*gpt-4*"          # All GPT-4 models
 llmls "*opus*"           # Models with "opus" in ID
 ```
@@ -114,6 +117,16 @@ View detailed information:
 ```bash
 llmls --detail
 llmls --detail "*claude*"
+llmls --detail "ollama/*"  # See Ollama model details (size, quantization, etc.)
+```
+
+Use custom Ollama server:
+
+```bash
+llmls --ollama-host http://192.168.1.100:11434  # Remote server
+llmls --ollama-host http://ollama:11434         # Docker container
+export OLLAMA_HOST=http://remote:11434          # Set via environment variable
+llmls
 ```
 
 List all providers:
@@ -136,12 +149,16 @@ llmls "*claude*" | grep reasoning
 
 # Combine filters
 llmls "anthropic/*" | grep -i vision
+llmls "ollama/*" | grep llama
 
 # Count models per provider
 llmls | awk '{print $2}' | sort | uniq -c
 
 # Get only model IDs
 llmls | awk '{print $1}'
+
+# List only local Ollama models
+llmls "ollama/*"
 ```
 
 ### Glob Pattern Syntax
@@ -185,6 +202,41 @@ llmls anthropic/*
 llmls *gpt-4*
 ```
 
+### Ollama Configuration
+
+By default, `llmls` attempts to connect to Ollama at `http://localhost:11434`. If Ollama is not available, it silently continues with OpenRouter models only.
+
+**Configuration Priority:**
+1. `--ollama-host` command-line flag (highest priority)
+2. `OLLAMA_HOST` environment variable
+3. Default: `http://localhost:11434`
+
+**Examples:**
+
+```bash
+# Use default (localhost:11434)
+llmls
+
+# Specify via command-line flag
+llmls --ollama-host http://192.168.1.100:11434
+
+# Set via environment variable
+export OLLAMA_HOST=http://ollama:11434
+llmls
+
+# Ollama unavailable - shows OpenRouter models only (no error)
+llmls  # When Ollama is not running
+```
+
+**Ollama Model Details:**
+
+When using `--detail` with Ollama models, additional information is displayed:
+- **Model Family** - Model architecture family (e.g., llama, mistral)
+- **Parameter Size** - Model size (e.g., 7B, 13B, 70B)
+- **Quantization** - Quantization level (e.g., Q4_0, Q8_0)
+- **Format** - Model format (e.g., gguf)
+- **Model Size** - Disk size in GB
+
 ### Output Format
 
 Models are displayed with the following columns:
@@ -197,9 +249,10 @@ Results are sorted by creation date in descending order (newest first).
 
 Example output:
 ```
-anthropic/claude-opus-4.5      anthropic            2025-11-24  Claude Opus 4.5 is Anthropic's frontier reasoning model optimized for complex software engineeri..
-openai/gpt-4.1                 openai               2025-04-14  GPT-4.1 is a flagship large language model optimized for advanced instruction following, real-worl..
-google/gemini-3-pro-preview    google               2025-11-18  Gemini 3 Pro is Google's flagship frontier model for high-precision multimodal reasoning, combin..
+anthropic/claude-opus-4.5      anthropic  2025-11-24  Claude Opus 4.5 is Anthropic's frontier reasoning model optimized for complex software engineeri..
+openai/gpt-4.1                 openai     2025-04-14  GPT-4.1 is a flagship large language model optimized for advanced instruction following, real-worl..
+ollama/llama3.2:latest         ollama     2024-12-01  llama 3B (Q4_0) - 2.0 GB
+google/gemini-3-pro-preview    google     2025-11-18  Gemini 3 Pro is Google's flagship frontier model for high-precision multimodal reasoning, combin..
 ```
 
 ### Help

@@ -27,6 +27,7 @@ func main() {
 func listModelsCommand(args []string) {
 	fs := flag.NewFlagSet("llmls", flag.ExitOnError)
 	detail := fs.Bool("detail", false, "Display detailed model information")
+	ollamaHost := fs.String("ollama-host", "", "Ollama server URL (default: $OLLAMA_HOST or http://localhost:11434)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "llmls - List and manage LLM models\n\n")
@@ -40,14 +41,17 @@ func listModelsCommand(args []string) {
 		fmt.Fprintf(os.Stderr, "Subcommands:\n")
 		fmt.Fprintf(os.Stderr, "  providers  List all provider names\n\n")
 		fmt.Fprintf(os.Stderr, "Flags:\n")
-		fmt.Fprintf(os.Stderr, "  --detail  Display detailed model information\n")
+		fmt.Fprintf(os.Stderr, "  --detail       Display detailed model information\n")
+		fmt.Fprintf(os.Stderr, "  --ollama-host  Ollama server URL (default: $OLLAMA_HOST or http://localhost:11434)\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  llmls                    List all models\n")
-		fmt.Fprintf(os.Stderr, "  llmls \"anthropic/*\"       List Anthropic models\n")
-		fmt.Fprintf(os.Stderr, "  llmls \"*gpt-4*\"           Search for GPT-4 models\n")
-		fmt.Fprintf(os.Stderr, "  llmls --detail \"*opus*\"   Detailed view of Opus models\n")
-		fmt.Fprintf(os.Stderr, "  llmls providers          List all providers\n")
-		fmt.Fprintf(os.Stderr, "  llmls | grep vision      Filter by description\n")
+		fmt.Fprintf(os.Stderr, "  llmls                                List all models (OpenRouter + Ollama)\n")
+		fmt.Fprintf(os.Stderr, "  llmls \"anthropic/*\"                   List Anthropic models\n")
+		fmt.Fprintf(os.Stderr, "  llmls \"ollama/*\"                      List Ollama models only\n")
+		fmt.Fprintf(os.Stderr, "  llmls \"*gpt-4*\"                       Search for GPT-4 models\n")
+		fmt.Fprintf(os.Stderr, "  llmls --detail \"*opus*\"               Detailed view of Opus models\n")
+		fmt.Fprintf(os.Stderr, "  llmls --ollama-host http://remote:11434  Use remote Ollama server\n")
+		fmt.Fprintf(os.Stderr, "  llmls providers                      List all providers\n")
+		fmt.Fprintf(os.Stderr, "  llmls | grep vision                  Filter by description\n")
 	}
 
 	if args != nil {
@@ -68,6 +72,10 @@ func listModelsCommand(args []string) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Fetch models from Ollama and merge
+	ollamaModels := FetchOllamaModels(GetOllamaHost(*ollamaHost))
+	models = append(models, ollamaModels...)
 
 	// Filter models by pattern
 	models = FilterModels(models, pattern)

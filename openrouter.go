@@ -26,6 +26,7 @@ type Model struct {
 	Architecture   Architecture `json:"architecture"`
 	Pricing        Pricing      `json:"pricing"`
 	TopProvider    TopProvider  `json:"top_provider"`
+	OllamaDetails  *OllamaDetails `json:"-"` // Ollama-specific details (not from JSON)
 }
 
 // Architecture represents model architecture details
@@ -51,6 +52,15 @@ type TopProvider struct {
 	ContextLength        int  `json:"context_length"`
 	MaxCompletionTokens  int  `json:"max_completion_tokens"`
 	IsModerated          bool `json:"is_moderated"`
+}
+
+// OllamaDetails represents Ollama-specific model details
+type OllamaDetails struct {
+	Size              int64
+	Format            string
+	Family            string
+	ParameterSize     string
+	QuantizationLevel string
 }
 
 // ModelsResponse represents the API response structure
@@ -300,6 +310,26 @@ func DisplayModelsDetailed(models []Model) {
 		// Moderation
 		if model.TopProvider.IsModerated {
 			fmt.Println("Moderation:        Enabled")
+		}
+
+		// Ollama-specific details
+		if model.OllamaDetails != nil {
+			if model.OllamaDetails.Family != "" {
+				fmt.Printf("Model Family:      %s\n", model.OllamaDetails.Family)
+			}
+			if model.OllamaDetails.ParameterSize != "" {
+				fmt.Printf("Parameter Size:    %s\n", model.OllamaDetails.ParameterSize)
+			}
+			if model.OllamaDetails.QuantizationLevel != "" {
+				fmt.Printf("Quantization:      %s\n", model.OllamaDetails.QuantizationLevel)
+			}
+			if model.OllamaDetails.Format != "" {
+				fmt.Printf("Format:            %s\n", model.OllamaDetails.Format)
+			}
+			if model.OllamaDetails.Size > 0 {
+				sizeGB := float64(model.OllamaDetails.Size) / (1024 * 1024 * 1024)
+				fmt.Printf("Model Size:        %.2f GB\n", sizeGB)
+			}
 		}
 
 		// Description (full, not truncated)
