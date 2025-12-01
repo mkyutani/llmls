@@ -17,10 +17,39 @@ const openRouterModelsURL = "https://openrouter.ai/api/v1/models"
 
 // Model represents an OpenRouter model
 type Model struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Created     int64  `json:"created"`
-	Description string `json:"description"`
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	Created        int64        `json:"created"`
+	Description    string       `json:"description"`
+	ContextLength  int          `json:"context_length"`
+	Architecture   Architecture `json:"architecture"`
+	Pricing        Pricing      `json:"pricing"`
+	TopProvider    TopProvider  `json:"top_provider"`
+}
+
+// Architecture represents model architecture details
+type Architecture struct {
+	Modality        string   `json:"modality"`
+	InputModalities []string `json:"input_modalities"`
+	OutputModalities []string `json:"output_modalities"`
+	Tokenizer       string   `json:"tokenizer"`
+}
+
+// Pricing represents model pricing information
+type Pricing struct {
+	Prompt            string `json:"prompt"`
+	Completion        string `json:"completion"`
+	Request           string `json:"request"`
+	Image             string `json:"image"`
+	WebSearch         string `json:"web_search"`
+	InternalReasoning string `json:"internal_reasoning"`
+}
+
+// TopProvider represents top provider details
+type TopProvider struct {
+	ContextLength        int  `json:"context_length"`
+	MaxCompletionTokens  int  `json:"max_completion_tokens"`
+	IsModerated          bool `json:"is_moderated"`
 }
 
 // ModelsResponse represents the API response structure
@@ -252,6 +281,139 @@ func DisplayProviders(models []Model, filter string) {
 	for _, provider := range providers {
 		fmt.Printf("%-*s\n", maxWidth, provider)
 	}
+}
+
+// DisplayModelsDetailed prints comprehensive information for each model
+func DisplayModelsDetailed(models []Model) {
+	if len(models) == 0 {
+		return
+	}
+
+	for i, model := range models {
+		if i > 0 {
+			fmt.Println() // Blank line between models
+		}
+
+		provider := ExtractProvider(model.ID)
+		date := FormatDate(model.Created)
+
+		// Print separator line
+		fmt.Println(strings.Repeat("=", 80))
+
+		// Basic information
+		fmt.Printf("Model ID:          %s\n", model.ID)
+		fmt.Printf("Name:              %s\n", model.Name)
+		fmt.Printf("Provider:          %s\n", provider)
+		fmt.Printf("Created:           %s\n", date)
+
+		// Technical details
+		if model.ContextLength > 0 {
+			fmt.Printf("Context Length:    %s tokens\n", FormatNumber(model.ContextLength))
+		}
+		if model.TopProvider.MaxCompletionTokens > 0 {
+			fmt.Printf("Max Completion:    %s tokens\n", FormatNumber(model.TopProvider.MaxCompletionTokens))
+		}
+
+		// Architecture
+		if model.Architecture.Modality != "" {
+			fmt.Printf("Modality:          %s\n", model.Architecture.Modality)
+		}
+
+		// Pricing information
+		if model.Pricing.Prompt != "" && model.Pricing.Prompt != "0" {
+			promptPrice := FormatPrice(model.Pricing.Prompt)
+			completionPrice := FormatPrice(model.Pricing.Completion)
+			fmt.Printf("Pricing:           $%s / 1K prompt tokens, $%s / 1K completion tokens\n",
+				promptPrice, completionPrice)
+		}
+
+		// Moderation
+		if model.TopProvider.IsModerated {
+			fmt.Println("Moderation:        Enabled")
+		}
+
+		// Description (full, not truncated)
+		if model.Description != "" {
+			fmt.Println("Description:")
+			// Wrap description text at terminal width
+			termWidth := GetTerminalWidth()
+			descWidth := termWidth - 4 // Leave margin
+			if descWidth < 40 {
+				descWidth = 40
+			}
+			wrappedDesc := WrapText(model.Description, descWidth)
+			for _, line := range wrappedDesc {
+				fmt.Printf("  %s\n", line)
+			}
+		}
+
+		fmt.Println(strings.Repeat("=", 80))
+	}
+}
+
+// FormatNumber formats a number with thousand separators
+func FormatNumber(n int) string {
+	str := fmt.Sprintf("%d", n)
+	result := ""
+	for i, c := range str {
+		if i > 0 && (len(str)-i)%3 == 0 {
+			result += ","
+		}
+		result += string(c)
+	}
+	return result
+}
+
+// FormatPrice formats a price string to a readable format
+func FormatPrice(price string) string {
+	// Convert from per-token to per-1K-tokens
+	if price == "" || price == "0" {
+		return "0"
+	}
+
+	// Parse as float
+	p := 0.0
+	fmt.Sscanf(price, "%f", &p)
+
+	// Multiply by 1000 to get per-1K price
+	p1k := p * 1000
+
+	// Format with appropriate precision
+	if p1k >= 1 {
+		return fmt.Sprintf("%.3f", p1k)
+	} else if p1k >= 0.01 {
+		return fmt.Sprintf("%.4f", p1k)
+	} else {
+		return fmt.Sprintf("%.6f", p1k)
+	}
+}
+
+// WrapText wraps text to specified width, breaking at word boundaries
+func WrapText(text string, width int) []string {
+	// Replace newline characters with spaces
+	text = strings.ReplaceAll(text, "\r\n", " ")
+	text = strings.ReplaceAll(text, "\r", " ")
+	text = strings.ReplaceAll(text, "\n", " ")
+
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return []string{}
+	}
+
+	var lines []string
+	currentLine := words[0]
+
+	for _, word := range words[1:] {
+		if len(currentLine)+1+len(word) <= width {
+			currentLine += " " + word
+		} else {
+			lines = append(lines, currentLine)
+			currentLine = word
+		}
+	}
+	lines = append(lines, currentLine)
+
+	return lines
 }
 
 // DisplayModelsFiltered prints models with provider names, filtered by model name

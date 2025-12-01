@@ -31,6 +31,7 @@ func listModelsCommand(args []string) {
 	providerFilter := fs.String("provider", "", "Filter models by provider name (partial match)")
 	modelFilter := fs.String("model", "", "Filter models by model name (partial match)")
 	descriptionFilter := fs.String("description", "", "Filter models by description text (partial match)")
+	detail := fs.Bool("detail", false, "Display detailed model information")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "llmls - List and manage LLM models\n\n")
@@ -73,7 +74,11 @@ func listModelsCommand(args []string) {
 	SortModelsByCreatedDesc(models)
 
 	// Display models
-	DisplayModels(models)
+	if *detail {
+		DisplayModelsDetailed(models)
+	} else {
+		DisplayModels(models)
+	}
 }
 
 func providersCommand() {
