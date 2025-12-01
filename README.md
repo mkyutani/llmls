@@ -15,6 +15,7 @@ A command-line tool to list and explore LLM models from various providers via Op
 - **Ollama Support** - Automatically includes local Ollama models with customizable server URL
 - **Sorted Output** - Models are sorted by creation date (newest first)
 - **Pipe-Friendly** - Designed to work seamlessly with Unix tools like `grep`, `awk`, and `sort`
+- **Version Display** - Show version information with `--version` or `-v` flag
 
 ## Installation
 
@@ -34,6 +35,16 @@ go install github.com/mkyutani/llmls@latest
 git clone https://github.com/mkyutani/llmls.git
 cd llmls
 go build -o llmls
+```
+
+**Note:** Building with `go install` or `go build` without version flags will show version as "dev". To build with a specific version:
+
+```bash
+# Build with version (replace v1.4.0 with desired version)
+go build -ldflags="-X main.version=v1.4.0" -o llmls .
+
+# Or install with version
+go install -ldflags="-X main.version=v1.4.0" github.com/mkyutani/llmls@latest
 ```
 
 ## Development Setup
@@ -96,6 +107,12 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidelines including:
 ## Usage
 
 ### Basic Commands
+
+Display version information:
+
+```bash
+llmls --version  # or -v
+```
 
 List all available models (OpenRouter + Ollama):
 
