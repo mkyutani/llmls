@@ -201,6 +201,61 @@ git branch -d feature/issue-<number>-description
 4. Create a pull request to `main`
 5. After review and approval, merge to `main`
 
+### Release Workflow
+
+Follow this workflow when creating a new release:
+
+#### 1. Determine Version Number
+- Review commits since last release: `git log v<last-version>..HEAD --oneline`
+- Use semantic versioning (MAJOR.MINOR.PATCH):
+  - MAJOR: Breaking changes
+  - MINOR: New features (backwards compatible)
+  - PATCH: Bug fixes (backwards compatible)
+
+#### 2. Create Release with Notes
+```bash
+# Create release with release notes
+gh release create v<version> \
+  --title "v<version>" \
+  --notes "## New Features
+- Feature 1
+- Feature 2
+
+## Bug Fixes
+- Fix 1
+
+## Documentation
+- Doc update 1"
+```
+
+#### 3. Build and Upload Binaries
+**IMPORTANT: Always build and upload binaries for all supported platforms**
+
+```bash
+# Create dist directory
+mkdir -p dist
+
+# Build for all platforms
+GOOS=linux GOARCH=amd64 go build -o dist/llmls-linux-amd64 .
+GOOS=linux GOARCH=arm64 go build -o dist/llmls-linux-arm64 .
+GOOS=darwin GOARCH=amd64 go build -o dist/llmls-darwin-amd64 .
+GOOS=darwin GOARCH=arm64 go build -o dist/llmls-darwin-arm64 .
+GOOS=windows GOARCH=amd64 go build -o dist/llmls-windows-amd64.exe .
+
+# Upload binaries to release
+gh release upload v<version> \
+  dist/llmls-linux-amd64 \
+  dist/llmls-linux-arm64 \
+  dist/llmls-darwin-amd64 \
+  dist/llmls-darwin-arm64 \
+  dist/llmls-windows-amd64.exe
+```
+
+#### 4. Verify Release
+- Check release page: `gh release view v<version> --web`
+- Verify all binaries are attached
+- Test download and execution of at least one binary
+
 ## Working with Claude Code
 
 ### Project Context
