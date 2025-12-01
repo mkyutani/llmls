@@ -30,6 +30,7 @@ func listModelsCommand(args []string) {
 	fs := flag.NewFlagSet("llmls", flag.ExitOnError)
 	providerFilter := fs.String("provider", "", "Filter models by provider name (partial match)")
 	modelFilter := fs.String("model", "", "Filter models by model name (partial match)")
+	descriptionFilter := fs.String("description", "", "Filter models by description text (partial match)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "llmls - List and manage LLM models\n\n")
@@ -58,7 +59,7 @@ func listModelsCommand(args []string) {
 	}
 
 	// Filter models
-	models = FilterModels(models, *providerFilter, *modelFilter)
+	models = FilterModels(models, *providerFilter, *modelFilter, *descriptionFilter)
 
 	// Sort by creation date descending
 	SortModelsByCreatedDesc(models)

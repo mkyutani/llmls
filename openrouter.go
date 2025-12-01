@@ -53,15 +53,16 @@ func FetchModels() ([]Model, error) {
 	return modelsResp.Data, nil
 }
 
-// FilterModels filters models by provider and model name (case-insensitive partial match)
-func FilterModels(models []Model, providerFilter, modelFilter string) []Model {
-	if providerFilter == "" && modelFilter == "" {
+// FilterModels filters models by provider, model name, and description (case-insensitive partial match)
+func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter string) []Model {
+	if providerFilter == "" && modelFilter == "" && descriptionFilter == "" {
 		return models
 	}
 
 	var filtered []Model
 	providerLower := strings.ToLower(providerFilter)
 	modelLower := strings.ToLower(modelFilter)
+	descriptionLower := strings.ToLower(descriptionFilter)
 
 	for _, model := range models {
 		// Extract provider from ID (format: "provider/model-name")
@@ -72,8 +73,9 @@ func FilterModels(models []Model, providerFilter, modelFilter string) []Model {
 
 		providerMatch := providerFilter == "" || strings.Contains(strings.ToLower(provider), providerLower)
 		modelMatch := modelFilter == "" || strings.Contains(strings.ToLower(model.ID), modelLower) || strings.Contains(strings.ToLower(model.Name), modelLower)
+		descriptionMatch := descriptionFilter == "" || strings.Contains(strings.ToLower(model.Description), descriptionLower)
 
-		if providerMatch && modelMatch {
+		if providerMatch && modelMatch && descriptionMatch {
 			filtered = append(filtered, model)
 		}
 	}
