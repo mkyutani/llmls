@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+const version = "1.0.0"
+
 func main() {
 	if len(os.Args) < 2 {
 		// Default behavior: list all models
@@ -16,6 +18,9 @@ func main() {
 	subcommand := os.Args[1]
 
 	switch subcommand {
+	case "--version", "-v":
+		fmt.Printf("llmls version %s\n", version)
+		return
 	case "providers":
 		providersCommand()
 	default:
