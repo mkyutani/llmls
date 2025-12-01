@@ -116,6 +116,7 @@ func FetchModels() ([]Model, error) {
 
 // FilterModels filters models by model ID using glob patterns
 // Supports * (any sequence) and ? (single character) in patterns
+// Also supports exact match against provider name (case-insensitive)
 // If pattern is empty, returns all models
 func FilterModels(models []Model, pattern string) []Model {
 	// If no pattern, return all models
@@ -125,8 +126,15 @@ func FilterModels(models []Model, pattern string) []Model {
 
 	var filtered []Model
 	for _, model := range models {
-		// Match against model ID and name
-		if globMatch(pattern, model.ID) || globMatch(pattern, model.Name) {
+		provider := ExtractProvider(model.ID)
+
+		// Match against:
+		// 1. Model ID (glob pattern)
+		// 2. Model name (glob pattern)
+		// 3. Provider name (exact match, case-insensitive)
+		if globMatch(pattern, model.ID) ||
+		   globMatch(pattern, model.Name) ||
+		   strings.EqualFold(pattern, provider) {
 			filtered = append(filtered, model)
 		}
 	}
