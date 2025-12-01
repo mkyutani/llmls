@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -69,19 +69,24 @@ type ModelsResponse struct {
 }
 
 // globMatch performs case-insensitive glob pattern matching
-// Supports * (any sequence) and ? (single character)
+// Supports * (any sequence including /) and ? (single character including /)
 func globMatch(pattern, str string) bool {
-	// Convert both to lowercase for case-insensitive matching
-	pattern = strings.ToLower(pattern)
-	str = strings.ToLower(str)
+	// Convert pattern to regex
+	// Escape special regex characters except * and ?
+	regexPattern := regexp.QuoteMeta(pattern)
+	// Replace escaped glob wildcards with regex equivalents
+	regexPattern = strings.ReplaceAll(regexPattern, "\\*", ".*")
+	regexPattern = strings.ReplaceAll(regexPattern, "\\?", ".")
+	// Anchor pattern to match entire string
+	regexPattern = "^" + regexPattern + "$"
 
-	// Use filepath.Match for glob matching
-	matched, err := filepath.Match(pattern, str)
+	// Case-insensitive match
+	re, err := regexp.Compile("(?i)" + regexPattern)
 	if err != nil {
-		// If pattern is invalid, fall back to exact match
-		return pattern == str
+		// If pattern is invalid, fall back to case-insensitive exact match
+		return strings.EqualFold(pattern, str)
 	}
-	return matched
+	return re.MatchString(str)
 }
 
 // FetchModels retrieves models from OpenRouter API
