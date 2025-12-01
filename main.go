@@ -8,6 +8,23 @@ import (
 
 var version = "dev"
 
+func showHelp() {
+	fmt.Fprintf(os.Stderr, "Usage: llmls [options] [pattern]\n\n")
+	fmt.Fprintf(os.Stderr, "List LLM models from OpenRouter and Ollama.\n\n")
+	fmt.Fprintf(os.Stderr, "Options:\n")
+	fmt.Fprintf(os.Stderr, "  --detail         Show detailed model information\n")
+	fmt.Fprintf(os.Stderr, "  --ollama-host    Ollama server URL (default: $OLLAMA_HOST or http://localhost:11434)\n")
+	fmt.Fprintf(os.Stderr, "  -h, --help       Show this help message\n")
+	fmt.Fprintf(os.Stderr, "  -v, --version    Show version information\n\n")
+	fmt.Fprintf(os.Stderr, "Subcommands:\n")
+	fmt.Fprintf(os.Stderr, "  providers        List all provider names\n\n")
+	fmt.Fprintf(os.Stderr, "Examples:\n")
+	fmt.Fprintf(os.Stderr, "  llmls                   List all models\n")
+	fmt.Fprintf(os.Stderr, "  llmls \"anthropic/*\"     List Anthropic models\n")
+	fmt.Fprintf(os.Stderr, "  llmls --detail cohere   Show detailed Cohere models\n")
+	fmt.Fprintf(os.Stderr, "  llmls providers         List all providers\n")
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		// Default behavior: list all models
@@ -18,6 +35,9 @@ func main() {
 	subcommand := os.Args[1]
 
 	switch subcommand {
+	case "--help", "-h":
+		showHelp()
+		return
 	case "--version", "-v":
 		fmt.Printf("llmls version %s\n", version)
 		return
@@ -34,32 +54,7 @@ func listModelsCommand(args []string) {
 	detail := fs.Bool("detail", false, "Display detailed model information")
 	ollamaHost := fs.String("ollama-host", "", "Ollama server URL (default: $OLLAMA_HOST or http://localhost:11434)")
 
-	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "llmls - List and manage LLM models\n\n")
-		fmt.Fprintf(os.Stderr, "Usage:\n")
-		fmt.Fprintf(os.Stderr, "  llmls [flags] [pattern]\n")
-		fmt.Fprintf(os.Stderr, "  llmls providers\n\n")
-		fmt.Fprintf(os.Stderr, "Arguments:\n")
-		fmt.Fprintf(os.Stderr, "  pattern  Search by model ID using glob pattern or provider name\n")
-		fmt.Fprintf(os.Stderr, "           Glob pattern: * (any sequence) and ? (single character)\n")
-		fmt.Fprintf(os.Stderr, "           Provider name: exact match (case-insensitive)\n")
-		fmt.Fprintf(os.Stderr, "           Examples: \"anthropic/*\", \"*gpt-4*\", \"cohere\"\n\n")
-		fmt.Fprintf(os.Stderr, "Subcommands:\n")
-		fmt.Fprintf(os.Stderr, "  providers  List all provider names\n\n")
-		fmt.Fprintf(os.Stderr, "Flags:\n")
-		fmt.Fprintf(os.Stderr, "  --detail       Display detailed model information\n")
-		fmt.Fprintf(os.Stderr, "  --ollama-host  Ollama server URL (default: $OLLAMA_HOST or http://localhost:11434)\n")
-		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  llmls                                List all models (OpenRouter + Ollama)\n")
-		fmt.Fprintf(os.Stderr, "  llmls cohere                         List all Cohere models (provider exact match)\n")
-		fmt.Fprintf(os.Stderr, "  llmls \"anthropic/*\"                   List Anthropic models (glob pattern)\n")
-		fmt.Fprintf(os.Stderr, "  llmls \"ollama/*\"                      List Ollama models only\n")
-		fmt.Fprintf(os.Stderr, "  llmls \"*gpt-4*\"                       Search for GPT-4 models\n")
-		fmt.Fprintf(os.Stderr, "  llmls --detail \"*opus*\"               Detailed view of Opus models\n")
-		fmt.Fprintf(os.Stderr, "  llmls --ollama-host http://remote:11434  Use remote Ollama server\n")
-		fmt.Fprintf(os.Stderr, "  llmls providers                      List all providers\n")
-		fmt.Fprintf(os.Stderr, "  llmls | grep vision                  Filter by description\n")
-	}
+	fs.Usage = showHelp
 
 	if args != nil {
 		fs.Parse(args)
@@ -103,8 +98,6 @@ func providersCommand() {
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: llmls providers\n\n")
 		fmt.Fprintf(os.Stderr, "List all provider names.\n")
-		fmt.Fprintf(os.Stderr, "Use external tools like grep to filter:\n")
-		fmt.Fprintf(os.Stderr, "  llmls providers | grep open\n")
 	}
 
 	fs.Parse(os.Args[2:])
