@@ -8,13 +8,11 @@ A command-line tool to list and explore LLM models from various providers via Op
 ## Features
 
 - **Browse Models** - List all available LLM models from OpenRouter
-- **Glob Pattern Filtering** - Filter using `*` and `?` wildcards for flexible searches
-- **Filter by Provider** - Find models from specific providers (Anthropic, OpenAI, Google, etc.)
-- **Filter by Model** - Search for specific models by name
-- **Filter by Description** - Search models by description text
-- **Subcommands** - Quick access to providers and models list
-- **Detailed Information** - View model IDs, providers, creation dates, and descriptions with `--detail` flag
+- **Glob Pattern Search** - Search by model ID using `*` and `?` wildcards
+- **Provider List** - Quick access to all provider names
+- **Detailed Information** - View comprehensive model details with `--detail` flag
 - **Sorted Output** - Models are sorted by creation date (newest first)
+- **Pipe-Friendly** - Designed to work seamlessly with Unix tools like `grep`, `awk`, and `sort`
 
 ## Installation
 
@@ -97,10 +95,25 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidelines including:
 
 ### Basic Commands
 
-List all available models from OpenRouter:
+List all available models:
 
 ```bash
 llmls
+```
+
+Search models by ID (glob pattern):
+
+```bash
+llmls "anthropic/*"      # All Anthropic models
+llmls "*gpt-4*"          # All GPT-4 models
+llmls "*opus*"           # Models with "opus" in ID
+```
+
+View detailed information:
+
+```bash
+llmls --detail
+llmls --detail "*claude*"
 ```
 
 List all providers:
@@ -109,74 +122,44 @@ List all providers:
 llmls providers
 ```
 
-List all models with their providers:
+### Filtering with External Tools
+
+Since `llmls` follows Unix philosophy, use standard tools for advanced filtering:
 
 ```bash
-llmls models
+# Filter providers by pattern
+llmls providers | grep open
+
+# Filter by description
+llmls | grep vision
+llmls "*claude*" | grep reasoning
+
+# Combine filters
+llmls "anthropic/*" | grep -i vision
+
+# Count models per provider
+llmls | awk '{print $2}' | sort | uniq -c
+
+# Get only model IDs
+llmls | awk '{print $1}'
 ```
 
-### Glob Pattern Matching
+### Glob Pattern Syntax
 
-All filter arguments support glob patterns with `*` (any sequence) and `?` (single character):
+Patterns support standard glob wildcards:
+- `*` - Match any sequence of characters
+- `?` - Match any single character
 
-**Important:** Glob patterns must be quoted to prevent shell expansion:
-
-```bash
-# Providers starting with "open"
-llmls providers "open*"
-
-# Models containing "gpt-4"
-llmls models "*gpt-4*"
-
-# Providers ending with "ai"
-llmls providers "*ai"
-
-# Exact match (no glob characters)
-llmls providers anthropic
-```
-
-### Flag-based Filtering
-
-Filter models by provider name (glob pattern):
+**Important:** Quote patterns to prevent shell expansion:
 
 ```bash
-llmls --provider "anthropic"
-llmls --provider "open*"
-llmls --provider "*ai"
-```
-
-Filter models by model name (glob pattern):
-
-```bash
-llmls --model "*gpt-4*"
-llmls --model "claude*"
-llmls --model "*gemini*"
-```
-
-Filter by description (glob pattern):
-
-```bash
-llmls --description "*vision*"
-llmls --description "*audio*"
-```
-
-Combine filters (AND matching):
-
-```bash
-llmls --provider "google" --model "*gemini*"
-llmls --provider "anthropic" --model "*opus*"
-```
-
-Unified search (OR matching across model ID, provider, description):
-
-```bash
-llmls "*vision*"
-llmls "gpt*"
+llmls "anthropic/*"      # Correct
+llmls anthropic/*        # May expand in shell
 ```
 
 ### Shell Configuration for Easier Usage
 
-To avoid quoting glob patterns, you can configure your shell to disable glob expansion for `llmls`:
+To avoid quoting glob patterns, configure your shell to disable glob expansion for `llmls`:
 
 **For Bash (add to `~/.bashrc`):**
 ```bash
@@ -198,9 +181,8 @@ llmls() {
 After adding this configuration and restarting your shell, you can use glob patterns without quotes:
 
 ```bash
-llmls providers open*
-llmls models *gpt-4*
-llmls --provider *ai
+llmls anthropic/*
+llmls *gpt-4*
 ```
 
 ### Output Format
@@ -227,7 +209,6 @@ Display usage information:
 ```bash
 llmls --help
 llmls providers --help
-llmls models --help
 ```
 
 ## Troubleshooting

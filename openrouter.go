@@ -99,50 +99,19 @@ func FetchModels() ([]Model, error) {
 	return modelsResp.Data, nil
 }
 
-// FilterModels filters models by provider, model name, description, and unified search term using glob patterns
+// FilterModels filters models by model ID using glob patterns
 // Supports * (any sequence) and ? (single character) in patterns
-// If explicit filters (provider, model, description) are provided, they take precedence over searchTerm
-// searchTerm performs OR matching across model ID, provider name, and description
-func FilterModels(models []Model, providerFilter, modelFilter, descriptionFilter, searchTerm string) []Model {
-	// If using explicit filters, ignore search term
-	hasExplicitFilters := providerFilter != "" || modelFilter != "" || descriptionFilter != ""
-
-	// If no filters at all, return all models
-	if !hasExplicitFilters && searchTerm == "" {
+// If pattern is empty, returns all models
+func FilterModels(models []Model, pattern string) []Model {
+	// If no pattern, return all models
+	if pattern == "" {
 		return models
 	}
 
 	var filtered []Model
-
-	// Use search term if no explicit filters are provided
-	if !hasExplicitFilters && searchTerm != "" {
-		for _, model := range models {
-			// Extract provider from ID (format: "provider/model-name")
-			provider := ExtractProvider(model.ID)
-
-			// OR matching: search term matches any field using glob pattern
-			modelMatch := globMatch(searchTerm, model.ID) || globMatch(searchTerm, model.Name)
-			providerMatch := globMatch(searchTerm, provider)
-			descriptionMatch := globMatch(searchTerm, model.Description)
-
-			if modelMatch || providerMatch || descriptionMatch {
-				filtered = append(filtered, model)
-			}
-		}
-
-		return filtered
-	}
-
-	// Use explicit filters (AND matching)
 	for _, model := range models {
-		// Extract provider from ID (format: "provider/model-name")
-		provider := ExtractProvider(model.ID)
-
-		providerMatch := providerFilter == "" || globMatch(providerFilter, provider)
-		modelMatch := modelFilter == "" || globMatch(modelFilter, model.ID) || globMatch(modelFilter, model.Name)
-		descriptionMatch := descriptionFilter == "" || globMatch(descriptionFilter, model.Description)
-
-		if providerMatch && modelMatch && descriptionMatch {
+		// Match against model ID and name
+		if globMatch(pattern, model.ID) || globMatch(pattern, model.Name) {
 			filtered = append(filtered, model)
 		}
 	}
@@ -256,8 +225,8 @@ func DisplayModels(models []Model) {
 	}
 }
 
-// DisplayProviders prints unique provider names, optionally filtered using glob pattern
-func DisplayProviders(models []Model, filter string) {
+// DisplayProviders prints unique provider names
+func DisplayProviders(models []Model) {
 	if len(models) == 0 {
 		return
 	}
@@ -269,28 +238,18 @@ func DisplayProviders(models []Model, filter string) {
 		providerSet[provider] = true
 	}
 
-	// Convert to slice and filter using glob pattern
+	// Convert to slice
 	var providers []string
 	for provider := range providerSet {
-		if filter == "" || globMatch(filter, provider) {
-			providers = append(providers, provider)
-		}
+		providers = append(providers, provider)
 	}
 
 	// Sort alphabetically
 	sort.Strings(providers)
 
-	// Calculate max width
-	maxWidth := 0
+	// Display providers (one per line)
 	for _, provider := range providers {
-		if len(provider) > maxWidth {
-			maxWidth = len(provider)
-		}
-	}
-
-	// Display providers
-	for _, provider := range providers {
-		fmt.Printf("%-*s\n", maxWidth, provider)
+		fmt.Println(provider)
 	}
 }
 
@@ -427,57 +386,3 @@ func WrapText(text string, width int) []string {
 	return lines
 }
 
-// DisplayModelsFiltered prints models with provider names, filtered by model name using glob pattern
-func DisplayModelsFiltered(models []Model, filter string) {
-	if len(models) == 0 {
-		return
-	}
-
-	// Filter models by name using glob pattern
-	var filtered []Model
-	for _, model := range models {
-		if filter == "" || globMatch(filter, model.ID) || globMatch(filter, model.Name) {
-			filtered = append(filtered, model)
-		}
-	}
-
-	if len(filtered) == 0 {
-		return
-	}
-
-	// Sort by creation date descending
-	SortModelsByCreatedDesc(filtered)
-
-	// Get terminal width
-	termWidth := GetTerminalWidth()
-
-	// Calculate maximum widths for model and provider columns
-	maxModelWidth := 0
-	maxProviderWidth := 0
-
-	for _, model := range filtered {
-		if len(model.ID) > maxModelWidth {
-			maxModelWidth = len(model.ID)
-		}
-		provider := ExtractProvider(model.ID)
-		if len(provider) > maxProviderWidth {
-			maxProviderWidth = len(provider)
-		}
-	}
-
-	// Calculate available width for description
-	descWidth := CalculateDescriptionWidth(termWidth, maxModelWidth, maxProviderWidth)
-
-	// Display each model with dynamic column widths
-	for _, model := range filtered {
-		provider := ExtractProvider(model.ID)
-		date := FormatDate(model.Created)
-		desc := TruncateDescription(model.Description, descWidth)
-
-		// Format with dynamic widths: model_id | provider | date | description
-		fmt.Printf("%-*s %-*s %s %s\n",
-			maxModelWidth, model.ID,
-			maxProviderWidth, provider,
-			date, desc)
-	}
-}
