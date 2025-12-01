@@ -53,28 +53,35 @@ func FetchOllamaModels(host string) []Model {
 	resp, err := client.Get(url)
 	if err != nil {
 		// Silent fail - server not available
+		fmt.Fprintf(os.Stderr, "[DEBUG] Ollama connection error: %v\n", err)
 		return []Model{}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		// Silent fail - API error
+		fmt.Fprintf(os.Stderr, "[DEBUG] Ollama API returned status: %d\n", resp.StatusCode)
 		return []Model{}
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[DEBUG] Failed to read Ollama response: %v\n", err)
 		return []Model{}
 	}
 
 	var ollamaResp OllamaModelsResponse
 	if err := json.Unmarshal(body, &ollamaResp); err != nil {
+		fmt.Fprintf(os.Stderr, "[DEBUG] Failed to parse Ollama JSON: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[DEBUG] Response body: %s\n", string(body))
 		return []Model{}
 	}
 
 	// Convert Ollama models to unified Model format
 	models := make([]Model, 0, len(ollamaResp.Models))
+	fmt.Fprintf(os.Stderr, "[DEBUG] Found %d Ollama models\n", len(ollamaResp.Models))
 	for _, om := range ollamaResp.Models {
+		fmt.Fprintf(os.Stderr, "[DEBUG] Processing model: %s\n", om.Name)
 		model := Model{
 			ID:          "ollama/" + om.Name,
 			Name:        om.Name,
@@ -92,6 +99,7 @@ func FetchOllamaModels(host string) []Model {
 		models = append(models, model)
 	}
 
+	fmt.Fprintf(os.Stderr, "[DEBUG] Returning %d Ollama models\n", len(models))
 	return models
 }
 
