@@ -40,7 +40,7 @@ func listModelsCommand(args []string) {
 		fmt.Fprintf(os.Stderr, "Subcommands:\n")
 		fmt.Fprintf(os.Stderr, "  providers  List all provider names\n\n")
 		fmt.Fprintf(os.Stderr, "Flags:\n")
-		fs.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "  --detail  Display detailed model information\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
 		fmt.Fprintf(os.Stderr, "  llmls                    List all models\n")
 		fmt.Fprintf(os.Stderr, "  llmls \"anthropic/*\"       List Anthropic models\n")
