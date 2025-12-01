@@ -8,10 +8,12 @@ A command-line tool to list and explore LLM models from various providers via Op
 ## Features
 
 - **Browse Models** - List all available LLM models from OpenRouter
+- **Glob Pattern Filtering** - Filter using `*` and `?` wildcards for flexible searches
 - **Filter by Provider** - Find models from specific providers (Anthropic, OpenAI, Google, etc.)
 - **Filter by Model** - Search for specific models by name
+- **Filter by Description** - Search models by description text
 - **Subcommands** - Quick access to providers and models list
-- **Detailed Information** - View model IDs, providers, creation dates, and descriptions
+- **Detailed Information** - View model IDs, providers, creation dates, and descriptions with `--detail` flag
 - **Sorted Output** - Models are sorted by creation date (newest first)
 
 ## Installation
@@ -113,46 +115,92 @@ List all models with their providers:
 llmls models
 ```
 
-### Subcommands with Filters
+### Glob Pattern Matching
 
-Filter providers by name (partial match, case-insensitive):
+All filter arguments support glob patterns with `*` (any sequence) and `?` (single character):
+
+**Important:** Glob patterns must be quoted to prevent shell expansion:
 
 ```bash
+# Providers starting with "open"
+llmls providers "open*"
+
+# Models containing "gpt-4"
+llmls models "*gpt-4*"
+
+# Providers ending with "ai"
+llmls providers "*ai"
+
+# Exact match (no glob characters)
 llmls providers anthropic
-llmls providers open
-```
-
-Filter models by name (partial match, case-insensitive):
-
-```bash
-llmls models claude
-llmls models gpt-4
-llmls models gemini
 ```
 
 ### Flag-based Filtering
 
-Filter models by provider name:
+Filter models by provider name (glob pattern):
 
 ```bash
-llmls --provider anthropic
-llmls --provider openai
-llmls --provider google
+llmls --provider "anthropic"
+llmls --provider "open*"
+llmls --provider "*ai"
 ```
 
-Filter models by model name:
+Filter models by model name (glob pattern):
 
 ```bash
-llmls --model gpt-4
-llmls --model claude
-llmls --model gemini
+llmls --model "*gpt-4*"
+llmls --model "claude*"
+llmls --model "*gemini*"
 ```
 
-Combine filters:
+Filter by description (glob pattern):
 
 ```bash
-llmls --provider google --model gemini
-llmls --provider anthropic --model opus
+llmls --description "*vision*"
+llmls --description "*audio*"
+```
+
+Combine filters (AND matching):
+
+```bash
+llmls --provider "google" --model "*gemini*"
+llmls --provider "anthropic" --model "*opus*"
+```
+
+Unified search (OR matching across model ID, provider, description):
+
+```bash
+llmls "*vision*"
+llmls "gpt*"
+```
+
+### Shell Configuration for Easier Usage
+
+To avoid quoting glob patterns, you can configure your shell to disable glob expansion for `llmls`:
+
+**For Bash (add to `~/.bashrc`):**
+```bash
+llmls() {
+    set -f
+    command llmls "$@"
+    set +f
+}
+```
+
+**For Zsh (add to `~/.zshrc`):**
+```bash
+llmls() {
+    setopt local_options noglob
+    command llmls "$@"
+}
+```
+
+After adding this configuration and restarting your shell, you can use glob patterns without quotes:
+
+```bash
+llmls providers open*
+llmls models *gpt-4*
+llmls --provider *ai
 ```
 
 ### Output Format
