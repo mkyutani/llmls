@@ -23,13 +23,12 @@ A command-line tool to list and explore LLM models from various providers via Op
 
 Download the latest release from the [Releases page](https://github.com/mkyutani/llmls/releases).
 
-### Option 2: Install with Go
+Pre-built binaries include the correct version information and are available for:
+- Linux (amd64, arm64)
+- macOS (amd64, arm64)
+- Windows (amd64)
 
-```bash
-go install github.com/mkyutani/llmls@latest
-```
-
-### Option 3: Build from Source
+### Option 2: Build from Source
 
 ```bash
 git clone https://github.com/mkyutani/llmls.git
@@ -37,15 +36,7 @@ cd llmls
 go build -o llmls
 ```
 
-**Note:** Building with `go install` or `go build` without version flags will show version as "dev". To build with a specific version:
-
-```bash
-# Build with version (replace v1.4.0 with desired version)
-go build -ldflags="-X main.version=v1.4.0" -o llmls .
-
-# Or install with version
-go install -ldflags="-X main.version=v1.4.0" github.com/mkyutani/llmls@latest
-```
+**Note:** Building with `go build` without version flags will show version as "dev". This is fine for development, but for production use, download the pre-built binary from the releases page.
 
 ## Development Setup
 
