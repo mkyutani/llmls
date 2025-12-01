@@ -203,16 +203,42 @@ git branch -d feature/issue-<number>-description
 
 ### Release Workflow
 
-Follow this workflow when creating a new release:
+This project uses GitHub Actions for automated release workflow.
 
-#### 1. Determine Version Number
+#### Automated Release (Recommended)
+
+The release workflow is automated via GitHub Actions. Simply push a tag to trigger:
+
+```bash
+# 1. Determine version number
+# Review commits since last release
+git log v<last-version>..HEAD --oneline
+
+# Use semantic versioning (MAJOR.MINOR.PATCH):
+# - MAJOR: Breaking changes
+# - MINOR: New features (backwards compatible)
+# - PATCH: Bug fixes (backwards compatible)
+
+# 2. Create and push tag
+git tag v<version>
+git push origin v<version>
+```
+
+The GitHub Actions workflow (`.github/workflows/release.yml`) will automatically:
+- Build binaries for all supported platforms (linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64)
+- Create a GitHub release with the tag
+- Generate release notes from commits
+- Upload all built binaries to the release
+
+#### Manual Release (Alternative)
+
+If you need to create a release manually:
+
+**1. Determine Version Number**
 - Review commits since last release: `git log v<last-version>..HEAD --oneline`
-- Use semantic versioning (MAJOR.MINOR.PATCH):
-  - MAJOR: Breaking changes
-  - MINOR: New features (backwards compatible)
-  - PATCH: Bug fixes (backwards compatible)
+- Use semantic versioning (MAJOR.MINOR.PATCH)
 
-#### 2. Create Release with Notes
+**2. Create Release with Notes**
 ```bash
 # Create release with release notes
 gh release create v<version> \
@@ -228,9 +254,7 @@ gh release create v<version> \
 - Doc update 1"
 ```
 
-#### 3. Build and Upload Binaries
-**IMPORTANT: Always build and upload binaries for all supported platforms**
-
+**3. Build and Upload Binaries**
 ```bash
 # Create dist directory
 mkdir -p dist
@@ -251,7 +275,7 @@ gh release upload v<version> \
   dist/llmls-windows-amd64.exe
 ```
 
-#### 4. Verify Release
+**4. Verify Release**
 - Check release page: `gh release view v<version> --web`
 - Verify all binaries are attached
 - Test download and execution of at least one binary
